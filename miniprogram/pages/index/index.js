@@ -237,46 +237,75 @@ Page({
     });
   },
 
-  // Promise 版热量查询（返回匹配的 food 对象或 null）
+  // Promise 版热量查询（云数据库 + 本地数据兜底）
   queryCalorieAsync(dishName) {
     return new Promise((resolve) => {
       const db = wx.cloud.database();
-      // 策略1：精确匹配 name
+      // 策略1：云数据库精确匹配 name
       db.collection('foods').where({ name: dishName }).get().then(exactRes => {
         if (exactRes.data.length > 0) {
           return resolve(exactRes.data[0]);
         }
-        // 策略2：获取全量数据，匹配 name + aliases
-        return db.collection('foods').get();
+        // 策略2：云数据库全量扫描（增加 limit 到 100）
+        return db.collection('foods').limit(100).get();
       }).then(allRes => {
-        if (!allRes || !allRes.data) return;
-        const allFoods = allRes.data;
-        // 优先找最长的包含匹配
-        let bestMatch = null;
-        let bestLen = 0;
-        for (const food of allFoods) {
-          // 匹配 name
-          if (dishName.includes(food.name) || food.name.includes(dishName)) {
-            if (food.name.length > bestLen) {
-              bestMatch = food;
-              bestLen = food.name.length;
+        // 在云数据中模糊匹配
+        const searchInList = (list) => {
+          let bestMatch = null;
+          let bestLen = 0;
+          for (const food of list) {
+            if (dishName.includes(food.name) || food.name.includes(dishName)) {
+              if (food.name.length > bestLen) {
+                bestMatch = food;
+                bestLen = food.name.length;
+              }
             }
-          }
-          // 匹配 aliases
-          if (food.aliases && Array.isArray(food.aliases)) {
-            for (const alias of food.aliases) {
-              if (dishName.includes(alias) || alias.includes(dishName)) {
-                if (alias.length > bestLen) {
-                  bestMatch = food;
-                  bestLen = alias.length;
+            if (food.aliases && Array.isArray(food.aliases)) {
+              for (const alias of food.aliases) {
+                if (dishName.includes(alias) || alias.includes(dishName)) {
+                  if (alias.length > bestLen) {
+                    bestMatch = food;
+                    bestLen = alias.length;
+                  }
                 }
               }
             }
           }
-        }
-        resolve(bestMatch);
+          return bestMatch;
+        };
+
+        const cloudMatch = allRes && allRes.data ? searchInList(allRes.data) : null;
+        if (cloudMatch) return resolve(cloudMatch);
+
+        // 策略3：本地数据兜底
+        const localMatch = searchInList(localFoodsData || []);
+        resolve(localMatch);
       }).catch(() => {
-        resolve(null);
+        // 云数据库失败，直接用本地数据
+        const searchInList = (list) => {
+          let bestMatch = null;
+          let bestLen = 0;
+          for (const food of list) {
+            if (dishName.includes(food.name) || food.name.includes(dishName)) {
+              if (food.name.length > bestLen) {
+                bestMatch = food;
+                bestLen = food.name.length;
+              }
+            }
+            if (food.aliases && Array.isArray(food.aliases)) {
+              for (const alias of food.aliases) {
+                if (dishName.includes(alias) || alias.includes(dishName)) {
+                  if (alias.length > bestLen) {
+                    bestMatch = food;
+                    bestLen = alias.length;
+                  }
+                }
+              }
+            }
+          }
+          return bestMatch;
+        };
+        resolve(searchInList(localFoodsData || []));
       });
     });
   },

@@ -147,15 +147,18 @@ Page({
       general: 'https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general'
     };
 
-    const [dishRes, ingredientRes, generalRes] = await Promise.allSettled([
-      this.callBaiduAPIPromise(API_URLS.dish, accessToken, base64Img),
-      this.callBaiduAPIPromise(API_URLS.ingredient, accessToken, base64Img),
-      this.callBaiduAPIPromise(API_URLS.general, accessToken, base64Img)
+    // 用 reflect 模式替代 Promise.allSettled（兼容低版本微信）
+    const reflect = (p) => p.then(v => ({ ok: true, v })).catch(e => ({ ok: false, e }));
+
+    const [dishRef, ingredientRef, generalRef] = await Promise.all([
+      reflect(this.callBaiduAPIPromise(API_URLS.dish, accessToken, base64Img)),
+      reflect(this.callBaiduAPIPromise(API_URLS.ingredient, accessToken, base64Img)),
+      reflect(this.callBaiduAPIPromise(API_URLS.general, accessToken, base64Img))
     ]);
 
-    const dishResults = dishRes.status === 'fulfilled' ? (dishRes.value.result || []) : [];
-    const ingredientResults = ingredientRes.status === 'fulfilled' ? (ingredientRes.value.result || []) : [];
-    const generalResults = generalRes.status === 'fulfilled' ? (generalRes.value.result || []) : [];
+    const dishResults = dishRef.ok ? (dishRef.v.result || []) : [];
+    const ingredientResults = ingredientRef.ok ? (ingredientRef.v.result || []) : [];
+    const generalResults = generalRef.ok ? (generalRef.v.result || []) : [];
 
     // 包装检测：通用识别结果中是否包含包装/容器类关键词
     const generalTopNames = generalResults.slice(0, 5).map(r => (r.name || r.keyword || '').toLowerCase());

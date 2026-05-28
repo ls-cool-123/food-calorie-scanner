@@ -1,0 +1,6 @@
+所在位置 行:1 字符: 14
++ export PATH="$PATH:/c/Program Files/Github CLI"
++              ~~~~~~
+变量引用无效。':' 后面的变量名称字符无效。请考虑使用 ${} 分隔名称。
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidVariableReferenceWithDrive

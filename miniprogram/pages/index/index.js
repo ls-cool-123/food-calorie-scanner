@@ -99,7 +99,7 @@ Page({
     });
   },
 
-  // 3. 识别食物（多结果级联：每层尝试所有5个结果后再切换API）
+  // 3. 识别食物（三路并行 + 包装检测，防止果蔬API误判瓶装食品）
   async identifyFood(filePath, accessToken) {
     wx.showLoading({ title: '识别中...' });
 
@@ -117,98 +117,103 @@ Page({
     const NON_INGREDIENT_KEYWORDS = ['非果蔬食材', '无法识别', '未知食材', '其他'];
     const NON_FOOD_KEYWORDS = ['人物', '建筑', '汽车', '桌子', '盘子', '筷子', '碗', '杯子', '手机', '书本', '动物', '风景',
       '瓶子', '罐子', '包装', '塑料', '标签', '纸箱', '盒子', '袋子', 'logo', '商标'];
+    const PACKAGING_KEYWORDS = ['瓶', '罐', '包装', '盒', '袋', '桶', '杯', '碗', '盘', '塑料', '玻璃', '易拉罐', '容器'];
 
-    // 记录所有识别结果的最高置信度，用于判断AI是否"不确定"
-    let allResults = [];
-
-    // 辅助函数：判断结果是否为有效食物
     function isValidResult(name, blacklist, minConf, confidence) {
       return name && !blacklist.includes(name) && confidence >= minConf;
     }
 
-    // 辅助函数：对一组结果逐个尝试匹配数据库，返回匹配到的食物或 null
     const tryMatchBatch = async (results, blacklist, minConf, apiLabel) => {
       const candidates = results
         .filter(r => isValidResult(r.name || r.keyword, blacklist, minConf, r.probability || r.score))
         .map(r => ({ name: r.name || r.keyword, confidence: r.probability || r.score }));
 
-      // 记录所有结果供后续决策
-      allResults = allResults.concat(candidates);
-
       for (const { name, confidence } of candidates) {
-        console.log(`🔹 [${apiLabel}] 尝试匹配候选: "${name}" (置信度: ${(confidence*100).toFixed(0)}%)`);
+        console.log(`[${apiLabel}] 尝试匹配候选: "${name}" (置信度: ${(confidence * 100).toFixed(0)}%)`);
         const food = await this.queryCalorieAsync(name);
         if (food) {
-          console.log(`✅ [${apiLabel}] 匹配成功: "${name}" → "${food.name}"`);
-          food._confidence = confidence; // 把置信度附在结果上
+          console.log(`[${apiLabel}] 匹配成功: "${name}" -> "${food.name}"`);
+          food._confidence = confidence;
           return food;
         }
       }
       return null;
     };
 
-    // --- 第一层：菜品识别 ---
-    try {
-      const dishRes = await this.callBaiduAPIPromise(
-        'https://aip.baidubce.com/rest/2.0/image-classify/v2/dish',
-        accessToken, base64Img
-      );
-      if (dishRes.result?.length > 0) {
-        const food = await tryMatchBatch(dishRes.result, NON_DISH_KEYWORDS, 0.6, '菜品识别');
-        if (food) {
-          wx.hideLoading();
-          wx.showToast({ title: '识别到：' + food.name, icon: 'success' });
-          this.handleQuerySuccess(food);
-          return;
-        }
-      }
-    } catch (e) { /* 失败则继续下一层 */ }
+    // 三路 API 并行调用
+    const API_URLS = {
+      dish: 'https://aip.baidubce.com/rest/2.0/image-classify/v2/dish',
+      ingredient: 'https://aip.baidubce.com/rest/2.0/image-classify/v1/classify/ingredient',
+      general: 'https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general'
+    };
 
-    // --- 第二层：果蔬识别（仅用于水果蔬菜食材，高阈值防止误判）---
-    try {
-      const ingredientRes = await this.callBaiduAPIPromise(
-        'https://aip.baidubce.com/rest/2.0/image-classify/v1/classify/ingredient',
-        accessToken, base64Img
-      );
-      if (ingredientRes.result?.length > 0) {
-        const food = await tryMatchBatch(ingredientRes.result, NON_INGREDIENT_KEYWORDS, 0.6, '果蔬识别');
-        if (food) {
-          wx.hideLoading();
-          wx.showToast({ title: '识别到：' + food.name, icon: 'success' });
-          this.handleQuerySuccess(food);
-          return;
-        }
-      }
-    } catch (e) { /* 失败则继续下一层 */ }
+    const [dishRes, ingredientRes, generalRes] = await Promise.allSettled([
+      this.callBaiduAPIPromise(API_URLS.dish, accessToken, base64Img),
+      this.callBaiduAPIPromise(API_URLS.ingredient, accessToken, base64Img),
+      this.callBaiduAPIPromise(API_URLS.general, accessToken, base64Img)
+    ]);
 
-    // --- 第三层：通用物体识别（兜底，中等阈值）---
-    try {
-      const generalRes = await this.callBaiduAPIPromise(
-        'https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general',
-        accessToken, base64Img
-      );
-      if (generalRes.result?.length > 0) {
-        const food = await tryMatchBatch(generalRes.result, NON_FOOD_KEYWORDS, 0.45, '通用识别');
-        if (food) {
-          wx.hideLoading();
-          wx.showToast({ title: '识别到：' + food.name, icon: 'success' });
-          this.handleQuerySuccess(food);
-          return;
-        }
-      }
-    } catch (e) { /* 失败则进入兜底 */ }
+    const dishResults = dishRes.status === 'fulfilled' ? (dishRes.value.result || []) : [];
+    const ingredientResults = ingredientRes.status === 'fulfilled' ? (ingredientRes.value.result || []) : [];
+    const generalResults = generalRes.status === 'fulfilled' ? (generalRes.value.result || []) : [];
 
-    // --- 检查是否所有结果置信度都极低，说明AI完全不确定 ---
-    const maxConfidence = allResults.length > 0 ? Math.max(...allResults.map(r => r.confidence)) : 0;
-    if (allResults.length > 0 && maxConfidence < 0.5) {
-      console.log(`🔹 AI整体不确定（最高置信度仅${maxConfidence.toFixed(2)}），直接进入手动选择`);
+    // 包装检测：通用识别结果中是否包含包装/容器类关键词
+    const generalTopNames = generalResults.slice(0, 5).map(r => (r.name || r.keyword || '').toLowerCase());
+    const isPackaging = generalTopNames.some(name =>
+      PACKAGING_KEYWORDS.some(kw => name.includes(kw))
+    );
+    if (isPackaging) {
+      console.log('[包装检测] 检测到包装/容器特征，果蔬识别阈值提升至 0.85');
+    }
+
+    // 计算全局最高置信度
+    const allConfidences = [
+      ...dishResults.map(r => r.probability || r.score || 0),
+      ...ingredientResults.map(r => r.probability || r.score || 0),
+      ...generalResults.map(r => r.probability || r.score || 0)
+    ];
+    const maxConfidence = allConfidences.length > 0 ? Math.max(...allConfidences) : 0;
+
+    // 决策顺序：菜品 -> 果蔬（可能被包装检测抑制）-> 通用
+
+    // 1) 菜品识别（阈值 0.5）
+    const dishMatch = await tryMatchBatch(dishResults, NON_DISH_KEYWORDS, 0.5, '菜品识别');
+    if (dishMatch) {
+      wx.hideLoading();
+      wx.showToast({ title: '识别到：' + dishMatch.name, icon: 'success' });
+      this.handleQuerySuccess(dishMatch);
+      return;
+    }
+
+    // 2) 果蔬识别（包装图片阈值 0.85，正常图片 0.6）
+    const ingredientThreshold = isPackaging ? 0.85 : 0.6;
+    const ingredientMatch = await tryMatchBatch(ingredientResults, NON_INGREDIENT_KEYWORDS, ingredientThreshold, '果蔬识别');
+    if (ingredientMatch) {
+      wx.hideLoading();
+      wx.showToast({ title: '识别到：' + ingredientMatch.name, icon: 'success' });
+      this.handleQuerySuccess(ingredientMatch);
+      return;
+    }
+
+    // 3) 通用识别（阈值 0.4）
+    const generalMatch = await tryMatchBatch(generalResults, NON_FOOD_KEYWORDS, 0.4, '通用识别');
+    if (generalMatch) {
+      wx.hideLoading();
+      wx.showToast({ title: '识别到：' + generalMatch.name, icon: 'success' });
+      this.handleQuerySuccess(generalMatch);
+      return;
+    }
+
+    // 全局低置信度兜底
+    if (allConfidences.length > 0 && maxConfidence < 0.5) {
+      console.log(`AI整体不确定（最高置信度仅${maxConfidence.toFixed(2)}），直接进入手动选择`);
       wx.hideLoading();
       wx.showToast({ title: 'AI识别不太确定，请手动选择', icon: 'none', duration: 2000 });
       setTimeout(() => this.showAllFoodsList(), 2000);
       return;
     }
 
-    // --- 全部失败，进入手动选择 ---
+    // 全部失败，进入手动选择
     wx.hideLoading();
     wx.showToast({ title: '未识别到食物，请手动选择', icon: 'none', duration: 2000 });
     setTimeout(() => this.showAllFoodsList(), 2000);

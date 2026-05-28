@@ -364,38 +364,32 @@ Page({
     });
   },
 
-  // 手动选择食物列表（云数据库 + 本地兜底，合并去重）
+  // 手动选择食物列表（本地831条 + 云端补充去重）
   showAllFoodsList() {
-    wx.showLoading({ title: '加载食物列表...' });
-
-    // 先从云数据库加载（上限100条），失败或不够时用本地数据补充
-    const loadFromCloud = new Promise((resolve) => {
-      const db = wx.cloud.database();
-      db.collection('foods').limit(100).get().then(res => {
-        resolve(res.data || []);
-      }).catch(() => {
-        resolve([]);
-      });
+    // 先立即展示本地全部数据，确保不出现"不全"的情况
+    const localList = localFoodsData || [];
+    this.setData({
+      showFoodList: true,
+      allFoods: localList,
+      filteredFoods: localList,
+      foodSearchKeyword: ''
     });
 
-    loadFromCloud.then(cloudFoods => {
-      // 合并本地数据（用 name 去重，云数据优先）
-      const cloudNames = new Set(cloudFoods.map(f => f.name));
-      const localOnly = (localFoodsData || []).filter(f => !cloudNames.has(f.name));
-      const allFoods = [...cloudFoods, ...localOnly];
-
-      wx.hideLoading();
-      if (allFoods.length === 0) {
-        wx.showToast({ title: '食物列表为空', icon: 'none' });
-        return;
+    // 异步加载云端数据补充（云端录入的用户自定义食物）
+    const db = wx.cloud.database();
+    db.collection('foods').limit(100).get().then(res => {
+      const cloudFoods = res.data || [];
+      if (cloudFoods.length === 0) return;
+      const localNames = new Set(localList.map(f => f.name));
+      const newFromCloud = cloudFoods.filter(f => !localNames.has(f.name));
+      if (newFromCloud.length > 0) {
+        const merged = [...this.data.allFoods, ...newFromCloud];
+        this.setData({
+          allFoods: merged,
+          filteredFoods: merged
+        });
       }
-      this.setData({
-        showFoodList: true,
-        allFoods: allFoods,
-        filteredFoods: allFoods,
-        foodSearchKeyword: ''
-      });
-    });
+    }).catch(() => {});
   },
 
   hideFoodList() {

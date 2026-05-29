@@ -366,12 +366,16 @@ Page({
 
   // 手动选择食物列表（本地831条 + 云端补充去重）
   showAllFoodsList() {
-    // 先立即展示本地全部数据，确保不出现"不全"的情况
+    // 立即展示本地数据 + 用户缓存食物
     const localList = localFoodsData || [];
+    const cachedFoods = this._getCachedFoods();
+    const localNames = new Set(localList.map(f => f.name));
+    const uniqueCached = cachedFoods.filter(f => !localNames.has(f.name));
+    const initialList = [...uniqueCached, ...localList];
     this.setData({
       showFoodList: true,
-      allFoods: localList,
-      filteredFoods: localList,
+      allFoods: initialList,
+      filteredFoods: initialList,
       foodSearchKeyword: ''
     });
 
@@ -380,8 +384,8 @@ Page({
     db.collection('foods').limit(100).get().then(res => {
       const cloudFoods = res.data || [];
       if (cloudFoods.length === 0) return;
-      const localNames = new Set(localList.map(f => f.name));
-      const newFromCloud = cloudFoods.filter(f => !localNames.has(f.name));
+      const currentNames = new Set(this.data.allFoods.map(f => f.name));
+      const newFromCloud = cloudFoods.filter(f => !currentNames.has(f.name));
       if (newFromCloud.length > 0) {
         const merged = [...this.data.allFoods, ...newFromCloud];
         this.setData({

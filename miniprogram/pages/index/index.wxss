@@ -133,6 +133,18 @@
   margin-top: 20rpx;
 }
 
+.manual-select-entry {
+  text-align: center;
+  margin-top: 24rpx;
+  padding: 16rpx 0;
+  font-size: 26rpx;
+  color: #576b95;
+  border-top: 1rpx solid #eee;
+}
+.manual-select-entry:active {
+  color: #07c160;
+}
+
 /* 弹窗输入项样式 */
 .input-item {
   display: flex;

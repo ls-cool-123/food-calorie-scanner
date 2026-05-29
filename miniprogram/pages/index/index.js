@@ -432,25 +432,47 @@ Page({
   inputCalorieChange(e) {
     this.setData({ inputCalorie: e.detail.value });
   },
+  // 本地缓存用户自行添加的食物（解决云数据库 limit 100 遗漏问题）
+  _getCachedFoods() {
+    try {
+      return wx.getStorageSync('user_added_foods') || [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  _addCachedFood(food) {
+    const cached = this._getCachedFoods();
+    // 去重
+    if (!cached.some(f => f.name === food.name)) {
+      cached.push(food);
+      try {
+        wx.setStorageSync('user_added_foods', cached);
+      } catch (e) {}
+    }
+  },
+
   saveFoodData() {
     const { inputName, inputCalorie } = this.data;
     if (!inputName || !inputCalorie) {
       wx.showToast({ title: '请填写完整信息', icon: 'none' });
       return;
     }
+    const newFood = {
+      name: inputName,
+      calorie: Number(inputCalorie),
+      unit: 'kcal/100g'
+    };
     const db = wx.cloud.database();
     db.collection('foods').add({
-      data: {
-        name: inputName,
-        calorie: Number(inputCalorie),
-        unit: 'kcal/100g'
-      },
+      data: newFood,
       success: () => {
         wx.showToast({ title: '录入成功' });
+        this._addCachedFood(newFood);
         this.hideModal();
       },
       fail: () => {
-        wx.showToast({ title: '录入失败', icon: 'none' });
+        wx.showToast({ title: '录入失败，请检查网络', icon: 'none' });
       }
     });
   },

@@ -53,7 +53,7 @@ Page({
         }
       },
       fail: (err) => {
-        if (err.errMsg.includes('cancel') || err.errMsg.includes('auth deny')) {
+        if (err.errMsg.includes('auth deny')) {
           wx.showModal({
             title: '需要权限',
             content: '需要开启相机/相册权限，才能拍照识别食物',
@@ -62,7 +62,7 @@ Page({
               if (modalRes.confirm) wx.openSetting();
             }
           });
-        } else {
+        } else if (!err.errMsg.includes('cancel')) {
           wx.showToast({ title: '选图失败，请重试', icon: 'none' });
         }
       }

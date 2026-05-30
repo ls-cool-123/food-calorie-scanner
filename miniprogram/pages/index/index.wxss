@@ -145,22 +145,6 @@
   color: #07c160;
 }
 
-/* 弹窗输入项样式 */
-.input-item {
-  display: flex;
-  align-items: center;
-  margin: 20rpx 0;
-  font-size: 30rpx;
-}
-.input-item input {
-  flex: 1;
-  height: 70rpx;
-  border: 1rpx solid #e0e0e0;
-  border-radius: 8rpx;
-  padding: 0 20rpx;
-  margin-left: 20rpx;
-}
-
 /* 食物选择列表（识别失败兜底） */
 .foodlist-overlay {
   position: fixed;

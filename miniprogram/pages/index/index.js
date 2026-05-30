@@ -121,21 +121,24 @@ Page({
       return name && !blacklist.includes(name) && confidence >= minConf;
     }
 
-    const tryMatchBatch = async (results, blacklist, minConf, apiLabel) => {
+    // 收集该 API 全部有效候选（不再提前返回，用于跨 API 共识评分）
+    const tryMatchAll = async (results, blacklist, minConf, apiLabel) => {
       const candidates = results
         .filter(r => isValidResult(r.name || r.keyword, blacklist, minConf, r.probability || r.score))
         .map(r => ({ name: r.name || r.keyword, confidence: r.probability || r.score }));
 
+      const matched = [];
       for (const { name, confidence } of candidates) {
         console.log(`[${apiLabel}] 尝试匹配候选: "${name}" (置信度: ${(confidence * 100).toFixed(0)}%)`);
         const food = await this.queryCalorieAsync(name);
         if (food) {
           console.log(`[${apiLabel}] 匹配成功: "${name}" -> "${food.name}"`);
           food._confidence = confidence;
-          return food;
+          food._apiLabel = apiLabel;
+          matched.push(food);
         }
       }
-      return null;
+      return matched;
     };
 
     // 三路 API 并行调用

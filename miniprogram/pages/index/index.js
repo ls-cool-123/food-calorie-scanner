@@ -301,6 +301,7 @@ Page({
         const searchInList = (list) => {
           let bestMatch = null;
           let bestLen = 0;
+          let bestRatio = 0;
           for (const food of list) {
             if (dishName.includes(food.name) || food.name.includes(dishName)) {
               if (food.name.length > bestLen) {
@@ -311,9 +312,11 @@ Page({
             if (food.aliases && Array.isArray(food.aliases)) {
               for (const alias of food.aliases) {
                 if (dishName.includes(alias) || alias.includes(dishName)) {
-                  if (alias.length > bestLen) {
+                  // 偏向长度接近的别名，避免"牛奶"误匹配"牛奶巧克力"
+                  const ratio = Math.min(dishName.length, alias.length) / Math.max(dishName.length, alias.length);
+                  if (ratio > bestRatio) {
                     bestMatch = food;
-                    bestLen = alias.length;
+                    bestRatio = ratio;
                   }
                 }
               }

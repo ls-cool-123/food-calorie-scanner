@@ -213,23 +213,15 @@ Page({
       }
       ranked.sort((a, b) => b._score - a._score);
 
-      // 整菜优先：如果菜品API匹配到的菜名包含了其他候选的名字（如"番茄炒蛋"包含"鸡蛋"），给予加成
-      for (let i = 0; i < ranked.length; i++) {
-        if (ranked[i]._apiLabel === '菜品识别') {
-          let hasSubMatch = false;
-          for (let j = 0; j < ranked.length; j++) {
-            if (i !== j && ranked[i].name.includes(ranked[j].name)) {
-              hasSubMatch = true;
-              break;
-            }
-          }
-          if (hasSubMatch) {
-            ranked[i]._score += 0.25;
-            console.log(`[整菜优先] "${ranked[i].name}" 包含子食材，得分+0.25 → ${ranked[i]._score.toFixed(2)}`);
-          }
-        }
+      // 菜品API置信率最高优先：如果菜品API有匹配结果，且它的原始置信度是所有候选中最高的，直接采用
+      const topByConfidence = [...allCandidates].sort((a, b) => b._confidence - a._confidence)[0];
+      if (topByConfidence._apiLabel === '菜品识别') {
+        wx.hideLoading();
+        wx.showToast({ title: '识别到：' + topByConfidence.name, icon: 'success' });
+        console.log(`[菜品优先] "${topByConfidence.name}" 置信度最高(${(topByConfidence._confidence * 100).toFixed(0)}%)，直接采用`);
+        this.handleQuerySuccess(topByConfidence);
+        return;
       }
-      ranked.sort((a, b) => b._score - a._score);
 
       const best = ranked[0];
       console.log(`[共识评分] 最优: "${best.name}" score=${best._score.toFixed(2)} consensus=${best._consensus}`);

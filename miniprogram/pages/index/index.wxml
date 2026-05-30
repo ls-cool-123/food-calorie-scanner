@@ -39,20 +39,8 @@
     </view>
   </view>
 
-  <!-- 手动录入按钮 -->
-  <button class="manual-btn" bindtap="showModal">手动录入食物热量</button>
-
-  <!-- 手动录入弹窗 -->
-  <modal title="手动录入热量" hidden="{{!showInputModal}}" confirm-text="保存" cancel-text="取消" bindconfirm="saveFoodData" bindcancel="hideModal">
-    <view class="input-item">
-      <text>食物名称：</text>
-      <input placeholder="请输入食物名称" value="{{inputName}}" bindinput="inputNameChange"></input>
-    </view>
-    <view class="input-item">
-      <text>热量（kcal/100g）：</text>
-      <input type="number" placeholder="请输入数字" value="{{inputCalorie}}" bindinput="inputCalorieChange"></input>
-    </view>
-  </modal>
+  <!-- 手动查询按钮 -->
+  <button class="manual-btn" bindtap="showAllFoodsList">手动查询食物热量</button>
 
   <!-- 食物选择列表（识别失败兜底） -->
   <view class="foodlist-overlay" wx:if="{{showFoodList}}" bindtap="hideFoodList">

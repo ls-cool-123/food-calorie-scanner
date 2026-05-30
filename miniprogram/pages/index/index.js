@@ -420,6 +420,16 @@ Page({
   },
 
   nop() {},
+
+  // 本地缓存用户添加的食物（用于食物列表补充）
+  _getCachedFoods() {
+    try {
+      return wx.getStorageSync('user_added_foods') || [];
+    } catch (e) {
+      return [];
+    }
+  },
+
   calcTotalCalorie(e) {
     const weight = e.detail.value;
     const caloriePer100g = this.data.result.calorie;

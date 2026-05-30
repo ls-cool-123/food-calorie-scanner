@@ -218,7 +218,7 @@ Page({
       console.log(`[共识评分] 最优: "${best.name}" score=${best._score.toFixed(2)} consensus=${best._consensus}`);
 
       // 评分 >= 0.35 直接用，有共识且 >= 0.25 也用
-      if (best._score >= 0.5 || (best._consensus && best._score >= 0.3)) {
+      if (best._score >= 0.35 || (best._consensus && best._score >= 0.25)) {
         wx.hideLoading();
         wx.showToast({ title: '识别到：' + best.name, icon: 'success' });
         this.handleQuerySuccess(best);

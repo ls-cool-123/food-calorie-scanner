@@ -167,7 +167,7 @@ Page({
       PACKAGING_KEYWORDS.some(kw => name.includes(kw))
     );
     if (isPackaging) {
-      console.log('[包装检测] 检测到包装/容器特征，果蔬识别阈值提升至 0.85');
+      console.log('[包装检测] 检测到包装/容器特征，果蔬识别阈值提升至 0.65');
     }
 
     // 跨 API 共识评分决策

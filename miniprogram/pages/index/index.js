@@ -267,7 +267,15 @@ Page({
         // 策略2：云数据库全量扫描（增加 limit 到 100）
         return db.collection('foods').limit(100).get();
       }).then(allRes => {
-        // 在云数据中模糊匹配
+        // 合并本地+云端数据一起模糊搜索，取匹配质量最好的（云端数据不全，分开搜索会漏掉匹配）
+        const cloudData = allRes && allRes.data ? allRes.data : [];
+        const localData = localFoodsData || [];
+        const mergedData = [...localData];
+        const localNames = new Set(localData.map(f => f.name));
+        for (const f of cloudData) {
+          if (!localNames.has(f.name)) mergedData.push(f);
+        }
+
         const searchInList = (list) => {
           let bestMatch = null;
           let bestLen = 0;
@@ -295,16 +303,12 @@ Page({
           return bestMatch;
         };
 
-        const cloudMatch = allRes && allRes.data ? searchInList(allRes.data) : null;
-        if (cloudMatch) return resolve(cloudMatch);
-
-        // 策略3：本地数据兜底
-        const localMatch = searchInList(localFoodsData || []);
-        if (localMatch) return resolve(localMatch);
+        const mergedMatch = searchInList(mergedData);
+        if (mergedMatch) return resolve(mergedMatch);
 
         // 策略4：用户缓存食物兜底
-        const cachedMatch = searchInList(this._getCachedFoods());
-        resolve(cachedMatch);
+        const cachedMatch = this._getCachedFoods();
+        resolve(cachedMatch && cachedMatch.length > 0 ? searchInList(cachedMatch) : null);
       }).catch(() => {
         // 云数据库失败，直接用本地数据 + 用户缓存
         const searchInList = (list) => {
@@ -333,7 +337,10 @@ Page({
           }
           return bestMatch;
         };
-        resolve(searchInList(localFoodsData || []) || searchInList(this._getCachedFoods()));
+        resolve(searchInList(localFoodsData || []) || (() => {
+          const cached = this._getCachedFoods();
+          return cached && cached.length > 0 ? searchInList(cached) : null;
+        })());
       });
     });
   },

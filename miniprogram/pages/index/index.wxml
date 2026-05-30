@@ -63,7 +63,10 @@
           wx:for="{{filteredFoods}}"
           wx:key="name"
           data-index="{{index}}"
+          data-name="{{item.name}}"
+          data-from="{{item._from}}"
           bindtap="selectFood"
+          bindlongpress="deleteFood"
         >
           <text class="foodlist-item-name">{{item.name}}</text>
           <text class="foodlist-item-cal">{{item.calorie}} kcal/100g</text>

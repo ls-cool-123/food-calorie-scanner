@@ -378,6 +378,15 @@ Page({
     }).then(allFoodsRes => {
       if (!allFoodsRes) return;
       const allFoods = allFoodsRes.data;
+      // 精确匹配优先
+      for (const food of allFoods) {
+        if (dishName === food.name) { this.handleQuerySuccess(food); return; }
+        if (food.aliases && Array.isArray(food.aliases)) {
+          for (const alias of food.aliases) {
+            if (dishName === alias) { this.handleQuerySuccess(food); return; }
+          }
+        }
+      }
       let bestMatch = null;
       let bestLen = 0;
       let bestRatio = 0;

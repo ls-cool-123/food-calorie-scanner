@@ -331,7 +331,7 @@ Page({
     }).then(allFoodsRes => {
       if (!allFoodsRes) return;
       const allFoods = allFoodsRes.data;
-      // 精确匹配优先
+      // 只做精确匹配（去除子串模糊匹配）
       for (const food of allFoods) {
         if (dishName === food.name) { this.handleQuerySuccess(food); return; }
         if (food.aliases && Array.isArray(food.aliases)) {
@@ -340,35 +340,8 @@ Page({
           }
         }
       }
-      let bestMatch = null;
-      let bestLen = 0;
-      let bestRatio = 0;
-      for (const food of allFoods) {
-        if (dishName.includes(food.name) || food.name.includes(dishName)) {
-          if (food.name.length > bestLen) {
-            bestMatch = food;
-            bestLen = food.name.length;
-          }
-        }
-        if (food.aliases && Array.isArray(food.aliases)) {
-          for (const alias of food.aliases) {
-            if (dishName.includes(alias) || alias.includes(dishName)) {
-              // 偏向长度接近的别名，避免"牛奶"误匹配"牛奶巧克力"
-              const ratio = Math.min(dishName.length, alias.length) / Math.max(dishName.length, alias.length);
-              if (ratio > bestRatio) {
-                bestMatch = food;
-                bestRatio = ratio;
-              }
-            }
-          }
-        }
-      }
-      if (bestMatch) {
-        this.handleQuerySuccess(bestMatch);
-      } else {
-        wx.hideLoading();
-        wx.showToast({ title: '未收录该食物', icon: 'none' });
-      }
+      wx.hideLoading();
+      wx.showToast({ title: '未收录该食物', icon: 'none' });
     }).catch(() => {
       wx.hideLoading();
       wx.showToast({ title: '查询失败', icon: 'none' });

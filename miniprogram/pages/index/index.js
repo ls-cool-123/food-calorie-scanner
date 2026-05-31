@@ -277,7 +277,7 @@ Page({
         }
 
         const searchInList = (list) => {
-          // 精确匹配优先：查询词 === 食物名或别名，直接返回（避免"玉米"→"咸蛋黄焗玉米"）
+          // 只做精确匹配：查询词 === 食物名 或 查询词 === 别名（去除子串模糊匹配）
           for (const food of list) {
             if (dishName === food.name) return food;
             if (food.aliases && Array.isArray(food.aliases)) {
@@ -286,31 +286,7 @@ Page({
               }
             }
           }
-          // 无精确匹配，再走子串模糊匹配
-          let bestMatch = null;
-          let bestLen = 0;
-          let bestRatio = 0;
-          for (const food of list) {
-            if (dishName.includes(food.name) || food.name.includes(dishName)) {
-              if (food.name.length > bestLen) {
-                bestMatch = food;
-                bestLen = food.name.length;
-              }
-            }
-            if (food.aliases && Array.isArray(food.aliases)) {
-              for (const alias of food.aliases) {
-                if (dishName.includes(alias) || alias.includes(dishName)) {
-                  // 偏向长度接近的别名，避免"牛奶"误匹配"牛奶巧克力"
-                  const ratio = Math.min(dishName.length, alias.length) / Math.max(dishName.length, alias.length);
-                  if (ratio > bestRatio) {
-                    bestMatch = food;
-                    bestRatio = ratio;
-                  }
-                }
-              }
-            }
-          }
-          return bestMatch;
+          return null;
         };
 
         const mergedMatch = searchInList(mergedData);

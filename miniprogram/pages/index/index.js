@@ -298,7 +298,7 @@ Page({
       }).catch(() => {
         // 云数据库失败，直接用本地数据 + 用户缓存
         const searchInList = (list) => {
-          // 精确匹配优先
+          // 只做精确匹配（去除子串模糊匹配）
           for (const food of list) {
             if (dishName === food.name) return food;
             if (food.aliases && Array.isArray(food.aliases)) {
@@ -307,30 +307,7 @@ Page({
               }
             }
           }
-          let bestMatch = null;
-          let bestLen = 0;
-          let bestRatio = 0;
-          for (const food of list) {
-            if (dishName.includes(food.name) || food.name.includes(dishName)) {
-              if (food.name.length > bestLen) {
-                bestMatch = food;
-                bestLen = food.name.length;
-              }
-            }
-            if (food.aliases && Array.isArray(food.aliases)) {
-              for (const alias of food.aliases) {
-                if (dishName.includes(alias) || alias.includes(dishName)) {
-                  // 偏向长度接近的别名，避免"牛奶"误匹配"牛奶巧克力"
-                  const ratio = Math.min(dishName.length, alias.length) / Math.max(dishName.length, alias.length);
-                  if (ratio > bestRatio) {
-                    bestMatch = food;
-                    bestRatio = ratio;
-                  }
-                }
-              }
-            }
-          }
-          return bestMatch;
+          return null;
         };
         resolve(searchInList(localFoodsData || []) || (() => {
           const cached = this._getCachedFoods();

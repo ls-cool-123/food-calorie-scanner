@@ -1,0 +1,89 @@
+<view class="container">
+  <view class="header">
+    <text class="header-title">饮食日记</text>
+  </view>
+
+  <!-- 今日总结卡片 -->
+  <view class="summary-card">
+    <view class="summary-title">今日摄入</view>
+    <view class="summary-kcal">{{totalToday}} <text class="summary-unit">kcal</text></view>
+    <view class="summary-goal" wx:if="{{goal > 0}}">
+      <text>目标 {{goal}} kcal</text>
+      <text class="summary-gap gap-{{gapType}}" wx:if="{{gapType}}">
+        {{gapType === 'deficit' ? '差' : '超'}}{{gap}} kcal
+      </text>
+    </view>
+    <button class="ai-btn" wx:if="{{goal > 0 && !todayEmpty}}" bindtap="requestAiAdvice" loading="{{aiLoading}}">
+      AI 饮食建议
+    </button>
+  </view>
+
+  <!-- AI 建议弹窗 -->
+  <view class="advice-overlay" wx:if="{{showAiAdvice}}" bindtap="hideAiAdvice">
+    <view class="advice-panel" catchtap="nop">
+      <view class="advice-header">
+        <text class="advice-title">AI 饮食建议</text>
+        <text class="advice-close" bindtap="hideAiAdvice">✕</text>
+      </view>
+      <view class="advice-body" wx:if="{{aiAdvice && !aiAdvice.error}}">
+        <view class="advice-scenario scenario-{{aiAdvice.scenario}}">
+          {{aiAdvice.scenario === 'deficit' ? '热量不足' : '热量超标'}}
+        </view>
+        <view class="advice-summary">{{aiAdvice.summary}}</view>
+        <view class="advice-list" wx:if="{{aiAdvice.advice && aiAdvice.advice.length > 0}}">
+          <text class="advice-list-title">具体建议：</text>
+          <view class="advice-item" wx:for="{{aiAdvice.advice}}" wx:key="index" wx:for-item="item">
+            • {{item}}
+          </view>
+        </view>
+      </view>
+      <view class="advice-body" wx:if="{{aiAdvice && aiAdvice.error}}">
+        <text class="advice-error">{{aiAdvice.message}}</text>
+      </view>
+      <view class="advice-loading" wx:if="{{!aiAdvice}}">
+        <text>AI 分析中...</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日饮食列表 -->
+  <view class="today-section" wx:if="{{!todayEmpty}}">
+    <view class="section-title">今日记录</view>
+    <view class="food-list">
+      <view class="food-item" wx:for="{{todayDiary.foods}}" wx:key="addedAt" wx:for-item="food" wx:for-index="idx">
+        <view class="food-info">
+          <text class="food-name">{{food.name}}</text>
+          <text class="food-detail">{{food.weight}}g · {{food.calorie}}kcal/100g</text>
+        </view>
+        <view class="food-kcal-row">
+          <text class="food-kcal">{{food.totalCalorie}} kcal</text>
+          <text class="food-delete" data-date="{{todayDiary.date}}" data-index="{{idx}}" bindtap="deleteFood">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="today-empty" wx:if="{{todayEmpty}}">
+    <text class="empty-text">今天还没有记录</text>
+    <text class="empty-hint">去首页拍照或搜索食物添加到日记</text>
+  </view>
+
+  <!-- 历史记录 -->
+  <view class="history-section" wx:if="{{history.length > 0}}">
+    <view class="section-title">历史记录</view>
+    <view class="history-group" wx:for="{{history}}" wx:key="date">
+      <view class="history-date">
+        <text>{{item.displayDate}}</text>
+        <text class="history-total">{{item.total}} kcal</text>
+      </view>
+      <view class="food-list">
+        <view class="food-item" wx:for="{{item.items}}" wx:key="foo" wx:for-item="diary">
+          <view class="food-info" wx:for="{{diary.foods}}" wx:key="addedAt" wx:for-item="food">
+            <text class="food-name">{{food.name}}</text>
+            <text class="food-detail">{{food.weight}}g · {{food.totalCalorie}}kcal</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

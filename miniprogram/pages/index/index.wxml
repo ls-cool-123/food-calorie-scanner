@@ -34,6 +34,9 @@
     <view class="total-result" wx:if="{{totalCalorie}}">
       本次摄入总热量：<text class="highlight">{{totalCalorie}} kcal</text>
     </view>
+    <view class="action-btns" wx:if="{{totalCalorie}}">
+      <button class="diary-btn" bindtap="addToDiary">添加到日记</button>
+    </view>
     <view class="manual-select-entry" bindtap="showAllFoodsList">
       <text>不是这个食物？点此手动选择</text>
     </view>
@@ -42,7 +45,10 @@
   <!-- 手动查询按钮 -->
   <button class="manual-btn" bindtap="showAllFoodsList">手动查询食物热量</button>
 
-  <!-- 食物选择列表（识别失败兜底） -->
+  <!-- 底部导航占位 -->
+  <view class="spacer"></view>
+
+  <!-- 食物选择列表 -->
   <view class="foodlist-overlay" wx:if="{{showFoodList}}" bindtap="hideFoodList">
     <view class="foodlist-panel" catchtap="nop">
       <view class="foodlist-header">

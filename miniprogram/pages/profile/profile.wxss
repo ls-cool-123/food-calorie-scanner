@@ -1,0 +1,133 @@
+.container {
+  padding: 30rpx;
+  min-height: 100vh;
+  background: #f6f6f6;
+}
+
+.header {
+  text-align: center;
+  padding: 30rpx 0;
+}
+.header-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  margin-bottom: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+}
+.user-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.user-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-left: 20rpx;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+}
+.card-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 30rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f8f8f8;
+}
+.form-label {
+  font-size: 30rpx;
+  color: #333;
+  flex-shrink: 0;
+}
+.form-input {
+  text-align: right;
+  font-size: 30rpx;
+  color: #333;
+  flex: 1;
+  margin-left: 30rpx;
+}
+
+.radio-group {
+  display: flex;
+}
+.radio-item {
+  font-size: 28rpx;
+  margin-left: 30rpx;
+}
+
+.picker {
+  font-size: 28rpx;
+  color: #576b95;
+}
+
+.save-btn {
+  margin-top: 30rpx;
+  height: 80rpx;
+  background: #07c160;
+  color: #fff;
+  border-radius: 40rpx;
+  font-size: 32rpx;
+  line-height: 80rpx;
+  border: none;
+}
+.save-btn::after {
+  border: none;
+}
+
+.result-card {
+  text-align: center;
+}
+.result-row {
+  display: flex;
+  justify-content: space-around;
+  padding: 20rpx 0;
+}
+.result-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.result-value {
+  font-size: 52rpx;
+  font-weight: bold;
+  color: #333;
+}
+.result-value.highlight {
+  color: #07c160;
+}
+.result-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.formula-note {
+  margin-top: 20rpx;
+  font-size: 22rpx;
+  color: #bbb;
+}

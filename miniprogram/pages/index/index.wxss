@@ -133,6 +133,31 @@
   margin-top: 20rpx;
 }
 
+/* 添加到日记按钮 */
+.action-btns {
+  text-align: center;
+  margin-top: 20rpx;
+}
+.diary-btn {
+  width: auto;
+  min-width: 300rpx;
+  height: 72rpx;
+  padding: 0 40rpx;
+  background: #07c160;
+  color: #fff;
+  border-radius: 36rpx;
+  font-size: 30rpx;
+  line-height: 72rpx;
+  border: none;
+}
+.diary-btn::after {
+  border: none;
+}
+
+.spacer {
+  height: 120rpx;
+}
+
 .manual-select-entry {
   text-align: center;
   margin-top: 24rpx;

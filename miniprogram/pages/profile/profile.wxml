@@ -1,0 +1,67 @@
+<view class="container">
+  <view class="header">
+    <text class="header-title">个人中心</text>
+  </view>
+
+  <view class="user-card">
+    <open-data class="user-avatar" type="userAvatarUrl"></open-data>
+    <open-data class="user-name" type="userNickName"></open-data>
+  </view>
+
+  <view class="card">
+    <view class="card-title">身体数据</view>
+
+    <view class="form-row">
+      <text class="form-label">性别</text>
+      <radio-group class="radio-group" bindchange="onGenderChange">
+        <label class="radio-item">
+          <radio value="male" checked="{{gender === 'male'}}"/> 男
+        </label>
+        <label class="radio-item">
+          <radio value="female" checked="{{gender === 'female'}}"/> 女
+        </label>
+      </radio-group>
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">身高 (cm)</text>
+      <input class="form-input" type="digit" placeholder="例如 170" value="{{height}}" bindinput="onHeightInput"/>
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">体重 (kg)</text>
+      <input class="form-input" type="digit" placeholder="例如 65" value="{{weight}}" bindinput="onWeightInput"/>
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">年龄</text>
+      <input class="form-input" type="number" placeholder="例如 25" value="{{age}}" bindinput="onAgeInput"/>
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">活动水平</text>
+      <picker class="picker" mode="selector" range="{{activityLabels}}" value="{{activityIndex}}" bindchange="onActivityChange">
+        <text>{{activityLabels[activityIndex]}}</text>
+      </picker>
+    </view>
+
+    <button class="save-btn" bindtap="saveProfile">保存</button>
+  </view>
+
+  <view class="card result-card" wx:if="{{hasProfile}}">
+    <view class="card-title">计算结果</view>
+    <view class="result-row">
+      <view class="result-item">
+        <text class="result-value">{{bmr}}</text>
+        <text class="result-label">基础代谢 (kcal)</text>
+      </view>
+      <view class="result-item">
+        <text class="result-value highlight">{{dailyGoal}}</text>
+        <text class="result-label">每日热量目标 (kcal)</text>
+      </view>
+    </view>
+    <view class="formula-note">
+      <text>基于 Mifflin-St Jeor 公式计算</text>
+    </view>
+  </view>
+</view>

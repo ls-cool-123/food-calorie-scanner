@@ -117,6 +117,7 @@ exports.main = async function(event) {
 
     return JSON.parse(llmResponse);
   } catch (e) {
+    console.error('[aiAdvisor] LLM call failed:', e.message);
     if (gapType === 'deficit') {
       var carbsKcal = Math.round(gap * 0.45);
       var proteinKcal = Math.round(gap * 0.30);

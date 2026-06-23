@@ -99,9 +99,19 @@ Page({
   onChooseAvatar(e) {
     const avatarUrl = e.detail.avatarUrl;
     this.setData({ avatarUrl });
+    this._saveUserInfo({ avatarUrl });
+  },
+
+  onNickNameInput(e) {
+    const nickName = e.detail.value;
+    this.setData({ nickName });
+    this._saveUserInfo({ nickName });
+  },
+
+  _saveUserInfo(partial) {
     try {
       const saved = wx.getStorageSync('user_info') || {};
-      wx.setStorageSync('user_info', { ...saved, avatarUrl });
+      wx.setStorageSync('user_info', { ...saved, ...partial });
     } catch (e) {}
   },
 

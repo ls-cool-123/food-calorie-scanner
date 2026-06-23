@@ -44,11 +44,22 @@
 .avatar-btn::after {
   border: none;
 }
-.user-name {
+.user-name-input {
   font-size: 32rpx;
   font-weight: bold;
   color: #333;
   margin-left: 20rpx;
+  flex: 1;
+  background: none;
+  padding: 0;
+  border: none;
+  outline: none;
+  line-height: 1.4;
+  min-height: 40rpx;
+}
+.user-name-input::placeholder {
+  color: #bbb;
+  font-weight: normal;
 }
 
 .card {

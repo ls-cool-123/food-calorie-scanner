@@ -7,7 +7,7 @@
     <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
       <image class="user-avatar" src="{{avatarUrl || '../../images/avatar.png'}}" mode="aspectFill"></image>
     </button>
-    <text class="user-name">{{nickName || '微信用户'}}</text>
+    <input class="user-name-input" type="nickname" placeholder="点击设置昵称" value="{{nickName}}" bindblur="onNickNameInput" />
   </view>
 
   <view class="card">

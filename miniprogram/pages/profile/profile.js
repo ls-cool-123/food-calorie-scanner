@@ -13,11 +13,14 @@ Page({
     activityLabels: ACTIVITY_LABELS,
     bmr: 0,
     dailyGoal: 0,
-    hasProfile: false
+    hasProfile: false,
+    avatarUrl: '',
+    nickName: ''
   },
 
   onShow() {
     this.loadProfile();
+    this.loadUserInfo();
   },
 
   loadProfile() {
